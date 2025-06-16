@@ -3,7 +3,7 @@ local path = "run"
 local apiUrl = "https://api.github.com/repos/" .. repo .. "/contents/" .. path
 
 local response = http.get(apiUrl)
-
+-- update server pls
 if response then
     local data = textutils.unserializeJSON(response.readAll())
     response.close()

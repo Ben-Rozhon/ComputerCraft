@@ -1,36 +1,21 @@
-local repo = "Ben-Rozhon/ComputerCraft"
-local path = "run"
-local apiUrl = "https://api.github.com/repos/" .. repo .. "/contents/" .. path
+-- startup.lua or receiver.lua on the turtle
+local modem = peripheral.find("modem") or error("No modem attached", 0)
+rednet.open(peripheral.getName(modem))
 
-local response = http.get(apiUrl)
--- update server pls
-if response then
-    local data = textutils.unserializeJSON(response.readAll())
-    response.close()
+local id = os.getComputerID()
+print("Turtle " .. id .. " ready to receive code")
 
-    for _, file in ipairs(data) do
-        if file.type == "file" and file.download_url then
-            print("Downloading: " .. file.name)
-            local fileRes = http.get(file.download_url)
-
-            if fileRes then
-                local content = fileRes.readAll()
-                fileRes.close()
-
-                local outFile = fs.open(file.name, "w")
-                outFile.write(content)
-                outFile.close()
-                print("Saved: " .. file.name)
-            else
-                print("Failed to download: " .. file.name)
+while true do
+    local senderId, message = rednet.receive()
+    if type(message) == "string" then
+        local func, err = load(message)
+        if func then
+            local success, result = pcall(func)
+            if not success then
+                print("Execution error:", result)
             end
+        else
+            print("Load error:", err)
         end
     end
-
-    if fs.exists("main.lua") then
-        print("Running main.lua...")
-        shell.run("main.lua")
-    end
-else
-    print("Failed to fetch GitHub directory listing.")
 end
